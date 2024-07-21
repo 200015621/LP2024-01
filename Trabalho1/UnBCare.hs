@@ -37,7 +37,7 @@ Caso o remédio ainda não exista no estoque, o novo estoque a ser retornado dev
 
 -}
 
-                                
+
 comprarMedicamento :: Medicamento -> Quantidade -> EstoqueMedicamentos -> EstoqueMedicamentos
 comprarMedicamento med1 quant1 [] = [(med1, quant1)]
 comprarMedicamento med1 quant1 ((med2, quant2):meds_stock)
@@ -57,8 +57,8 @@ onde v é o novo estoque.
 
 tomarMedicamento :: Medicamento -> EstoqueMedicamentos -> Maybe EstoqueMedicamentos
 tomarMedicamento med1 [] = Nothing
-tomarMedicamento med1 ((med2, quant2):meds_stock) 
-        | med1 == med2 = Just ((med2, quant2-1):meds_stock) 
+tomarMedicamento med1 ((med2, quant2):meds_stock)
+        | med1 == med2 = Just ((med2, quant2-1):meds_stock)
         | otherwise = tomarMedicamento med1 meds_stock
 
 {-
@@ -72,7 +72,7 @@ Se o medicamento não existir, retorne 0.
 
 consultarMedicamento :: Medicamento -> EstoqueMedicamentos -> Quantidade
 consultarMedicamento med1 [] = 0
-consultarMedicamento med1 ((med2, quant2):meds_stock) 
+consultarMedicamento med1 ((med2, quant2):meds_stock)
         | med1 == med2 = quant2
         | otherwise = consultarMedicamento med1 meds_stock
 
@@ -168,11 +168,11 @@ insertMedSorted med1 (med2:meds)
 
 insertPlanoMedicamento :: Horario -> Medicamento -> PlanoMedicamento -> PlanoMedicamento
 insertPlanoMedicamento h  med [] = [(h, [med])]
-insertPlanoMedicamento h1 med1 ((h2, med2:meds):ps) 
+insertPlanoMedicamento h1 med1 ((h2, med2:meds):ps)
                                 | h1 > h2 = (h2, med2:meds):(insertPlanoMedicamento h1 med1 ps)
-                                | h1 == h2 = (h2, insertMedSorted med1 (med2:meds)):ps 
-                                | otherwise = (h1, [med1]):(h2, med2:meds):ps 
-                                
+                                | h1 == h2 = (h2, insertMedSorted med1 (med2:meds)):ps
+                                | otherwise = (h1, [med1]):(h2, med2:meds):ps
+
 
 geraPlanoReceituarioAcc :: Receituario -> PlanoMedicamento -> PlanoMedicamento
 geraPlanoReceituarioAcc [] acc = acc
@@ -181,7 +181,7 @@ geraPlanoReceituarioAcc ((med, h:hs):rs) acc = geraPlanoReceituarioAcc ((med, hs
 
 
 geraPlanoReceituario :: Receituario -> PlanoMedicamento
-geraPlanoReceituario rec = geraPlanoReceituarioAcc rec [] 
+geraPlanoReceituario rec = geraPlanoReceituarioAcc rec []
 
 
 {- QUESTÃO 8  VALOR: 1,0 ponto
@@ -202,11 +202,11 @@ insertHorarioSorted h1 (h2:hs)
 
 insertReceituario :: Medicamento -> Horario ->  Receituario -> Receituario
 insertReceituario med1 h1 [] = [(med1, [h1])]
-insertReceituario med1 h1 ((med2, h2:hs):rs) 
+insertReceituario med1 h1 ((med2, h2:hs):rs)
                                 | med1 > med2 = (med2, h2:hs):(insertReceituario med1 h1 rs)
-                                | med1 == med2 = (med2, insertHorarioSorted h1 (h2:hs)):rs 
-                                | otherwise = (med1, [h1]):(med2, h2:hs):rs 
-                                
+                                | med1 == med2 = (med2, insertHorarioSorted h1 (h2:hs)):rs
+                                | otherwise = (med1, [h1]):(med2, h2:hs):rs
+
 
 geraReceituarioPlanoAcc ::  PlanoMedicamento -> Receituario -> Receituario
 geraReceituarioPlanoAcc [] acc = acc
@@ -215,7 +215,7 @@ geraReceituarioPlanoAcc ((h, med:meds):ps) acc = geraReceituarioPlanoAcc ((h, me
 
 
 geraReceituarioPlano :: PlanoMedicamento -> Receituario
-geraReceituarioPlano plano = geraReceituarioPlanoAcc plano [] 
+geraReceituarioPlano plano = geraReceituarioPlanoAcc plano []
 
 
 {-  QUESTÃO 9 VALOR: 1,0 ponto
@@ -231,7 +231,7 @@ updateEstoque :: Cuidado -> EstoqueMedicamentos -> Maybe EstoqueMedicamentos
 updateEstoque (Medicar med1) [] = Nothing
 updateEstoque (Comprar med1 quat1) [] = Just [(med1, quat1)]
 updateEstoque (Medicar med1) ((med2, quant2):meds)
-                        | (med1 == med2)&&(quant2>0) = Just ((med2, quant2-1):meds) 
+                        | (med1 == med2)&&(quant2>0) = Just ((med2, quant2-1):meds)
                         | otherwise = case (updateEstoque (Medicar med1) meds) of
                                         Nothing -> Nothing
                                         Just estoque -> Just ((med2, quant2):estoque)
@@ -256,19 +256,25 @@ juntamente com ministrar medicamento.
 
 -}
 
+
+filterCompras :: [Cuidado] -> [Medicamento]
+filterCompras [] = []
+filterCompras (c1:cs) = case c1 of
+                           Medicar med -> med:(filterCompras cs)
+                           Comprar med quat -> filterCompras cs
+
 checkPlantaoPlano :: Plantao -> PlanoMedicamento -> Bool
 checkPlantaoPlano [] [] = True
 checkPlantaoPlano [] _ = False
 checkPlantaoPlano _  [] = False
-checkPlantaoPlano ((h1, []):xs) ((h2, []):ys) = True
-checkPlantaoPlano ((h1, _):xs) ((h2, []):ys) = False
-checkPlantaoPlano ((h1, []):xs) ((h2, _):ys) = False
-checkPlantaoPlano ((h1, c1:cs):xs) ((h2, med2:meds):ys) = case c1 of
-                                                        Medicar med1 -> (med1 == med2)&&(checkPlantaoPlano ((h1, cs):xs) ((h2, meds):ys))
-                                                        Comprar med1 quat1 -> checkPlantaoPlano ((h1, cs):xs) ((h2, med2:meds):ys)
+checkPlantaoPlano ((h1, cs):xs) ((h2, meds):ys)
+                           | h1 == h2           = (plantao_meds == meds)&&(checkPlantaoPlano xs ys)
+                           | plantao_meds == [] = checkPlantaoPlano xs ((h2, meds):ys)
+                           | otherwise          = (checkPlantaoPlano ((h1, cs):xs) ys)&&(checkPlantaoPlano xs ((h2, meds):ys))
+                              where plantao_meds = filterCompras cs
 
 satisfaz :: Plantao -> PlanoMedicamento -> EstoqueMedicamentos -> Bool
-satisfaz plantao plano estoque = ((executaPlantao plantao estoque) /= Nothing) -- && (checkPlantaoPlano plantao plano)
+satisfaz plantao plano estoque = ((executaPlantao plantao estoque) /= Nothing) && (checkPlantaoPlano plantao plano)
 
 {-
 
@@ -298,7 +304,7 @@ gerarCompras [] ((m, q):meds)
                 | otherwise  = (gerarCompras [] meds)
 gerarCompras ((h, []):pls) estoque = gerarCompras pls estoque
 gerarCompras ((h, med1:meds):pls) estoque = gerarCompras ((h, meds):pls) (gerarCompra med1 estoque)
-            
+
 gerarMedicamentos :: PlanoMedicamento -> Plantao
 gerarMedicamentos [] = []
 gerarMedicamentos ((h, meds):pms) = (h, (map (\med->(Medicar med)) meds)):(gerarMedicamentos pms)
